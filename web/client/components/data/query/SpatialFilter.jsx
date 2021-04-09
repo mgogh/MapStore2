@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { find } from 'lodash';
+import { find, isNil } from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Col, Glyphicon, Panel, Row } from 'react-bootstrap';
@@ -30,6 +30,7 @@ class SpatialFilter extends React.Component {
         spatialMethodOptions: PropTypes.array,
         spatialPanelExpanded: PropTypes.bool,
         showDetailsButton: PropTypes.bool,
+        clearFilterOptions: PropTypes.object,
         showDetailsPanel: PropTypes.bool,
         withContainer: PropTypes.bool,
         actions: PropTypes.object,
@@ -46,6 +47,10 @@ class SpatialFilter extends React.Component {
         spatialField: {},
         spatialPanelExpanded: true,
         showDetailsButton: true,
+        clearFilterOptions: {
+            className: "square-button-sm no-border",
+            buttonStyle: "default"
+        },
         showDetailsPanel: false,
         withContainer: true,
         spatialMethodOptions: [],
@@ -254,6 +259,8 @@ class SpatialFilter extends React.Component {
             buttons.push({
                 glyph: 'clear-filter',
                 tooltipId: "queryform.spatialfilter.remove",
+                bsStyle: this.props.clearFilterOptions.buttonStyle,
+                className: this.props.clearFilterOptions.className,
                 onClick: () => this.resetSpatialFilter()
             });
         }
@@ -274,7 +281,7 @@ class SpatialFilter extends React.Component {
         const detailsPanel = this.props.showDetailsPanel ?
             (<GeometryDetails
                 useMapProjection={this.props.useMapProjection}
-                enableGeodesic={selectedMethod && selectedMethod.geodesic}
+                enableGeodesic={!isNil(selectedMethod.geodesic) ? selectedMethod.geodesic : true}
                 geometry={this.props.spatialField.geometry}
                 type={this.props.spatialField.method}
                 onShowPanel={this.props.actions.onShowSpatialSelectionDetails}
@@ -347,7 +354,7 @@ class SpatialFilter extends React.Component {
                 break;
             }
             default: {
-                this.changeDrawingStatus('start', method, "queryform", [], {geodesic: selectedMethod && selectedMethod.geodesic, stopAfterDrawing: true});
+                this.changeDrawingStatus('start', method, "queryform", [], {geodesic: !isNil(selectedMethod.geodesic) ? selectedMethod.geodesic : true, stopAfterDrawing: true});
             }
             }
         } else {

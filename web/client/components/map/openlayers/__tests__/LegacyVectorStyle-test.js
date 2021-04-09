@@ -8,8 +8,8 @@
 import expect from 'expect';
 import { getStyle, styleFunction, firstPointOfPolylineStyle, lastPointOfPolylineStyle, startEndPolylineStyle } from '../LegacyVectorStyle';
 
-import {geomCollFeature, multipointFt, lineStringFt} from '../../../../test-resources/drawsupport/features';
-import {DEFAULT_ANNOTATIONS_STYLES, STYLE_CIRCLE} from '../../../../utils/AnnotationsUtils';
+import {geomCollFeature, multipointFt, lineStringFt, polygonFt, multipolygonFt} from '../../../../test-resources/drawsupport/features';
+import {DEFAULT_ANNOTATIONS_STYLES, STYLE_CIRCLE, STYLE_POLYGON} from '../../../../utils/AnnotationsUtils';
 
 import Feature from 'ol/Feature';
 import {Point, LineString, MultiLineString, Polygon, MultiPolygon} from 'ol/geom';
@@ -445,5 +445,22 @@ describe('Test LegacyVectorStyle', () => {
         }, false, []);
         expect(styleObject).toExist();
         expect(styleObject.image_).toExist();
+    });
+    it('test getStyle with Polygon & MultiPolygon', () => {
+        [polygonFt, multipolygonFt].forEach(ft=> {
+            let styleObject = getStyle({ features: [ft], style: {...STYLE_POLYGON}}, false, []);
+            expect(styleObject).toExist();
+            let polygonStyle = styleObject[1];
+            expect(polygonStyle.fill_.color_).toBe("rgba(255, 255, 255, 0.2)");
+            expect(polygonStyle.stroke_.color_).toBe("rgb(255, 204, 51)");
+            styleObject = getStyle({
+                features: [ft],
+                style: {...STYLE_POLYGON, fillOpacity: 0, opacity: 0}
+            }, false, []);
+            expect(styleObject).toExist();
+            polygonStyle = styleObject[1];
+            expect(polygonStyle.fill_.color_).toBe("rgba(255, 255, 255, 0)");
+            expect(polygonStyle.stroke_.color_).toBe("rgba(255, 204, 51, 0)");
+        });
     });
 });

@@ -11,7 +11,6 @@ import {Provider} from 'react-redux';
 import expect from 'expect';
 import PluginsUtils from '../PluginsUtils';
 import assign from 'object-assign';
-import axios from '../../libs/ajax';
 
 import MapSearchPlugin from '../../plugins/MapSearch';
 
@@ -358,30 +357,6 @@ describe('PluginsUtils', () => {
         });
     });
 
-    it('importPlugin', (done) => {
-        axios.get('base/web/client/test-resources/lazy/dummy.js').then(source => {
-            PluginsUtils.importPlugin(source.data, (name, plugin) => {
-                expect(name).toBe('Dummy');
-                plugin.loadPlugin((pluginDef) => {
-                    expect(pluginDef).toExist();
-                    expect(pluginDef.component).toExist();
-                    done();
-                });
-            });
-        });
-    });
-
-    it('loadPlugin', (done) => {
-        PluginsUtils.loadPlugin('base/web/client/test-resources/lazy/dummy.js').then(({name, plugin}) => {
-            expect(name).toBe('Dummy');
-            plugin.loadPlugin((pluginDef) => {
-                expect(pluginDef).toExist();
-                expect(pluginDef.component).toExist();
-                done();
-            });
-        });
-    });
-
     it('combineReducers', () => {
         const P1 = {
             reducers: {
@@ -444,5 +419,53 @@ describe('PluginsUtils', () => {
             expect(counter).toBe(1);
             done();
         });
+    });
+    it('should load lazy plugins with stateSelector', () => {
+
+        const pluginDef = {
+            name: 'StateSelectorLazy',
+            stateSelector: 'selector'
+        };
+        const pluginWithSelectorState = (stateSelector) => function Plugin() { return <div className={stateSelector}></div>; };
+        const plugins = {
+            StateSelectorLazyPlugin: {
+                loadPlugin: (resolve) => resolve(pluginWithSelectorState)
+            }
+        };
+        const loadedPlugins = {
+            StateSelectorLazy: pluginWithSelectorState
+        };
+        const { impl: LoadedPlugin } = PluginsUtils.getPluginDescriptor({}, plugins, [], pluginDef, loadedPlugins);
+        ReactDOM.render(<LoadedPlugin/>, document.getElementById('container'));
+        expect(document.querySelector('.selector')).toBeTruthy();
+    });
+
+    it('should not throw an error if the loaded plugin is an object with component key', () => {
+
+        function MockStyleEditor() {
+            return <div></div>;
+        }
+        const pluginDef = {
+            ToolbarComponent: () => null,
+            cfg: {},
+            items: [],
+            name: 'StyleEditor',
+            plugin: MockStyleEditor,
+            priority: 1,
+            target: 'style'
+        };
+
+        const loadedPlugins = {
+            StyleEditor: {
+                component: MockStyleEditor,
+                containers: {},
+                epics: {},
+                name: 'StyleEditor',
+                reducers: {}
+            }
+        };
+        const result = PluginsUtils.getConfiguredPlugin(pluginDef, loadedPlugins);
+        expect(result.loaded).toBe(true);
+
     });
 });
