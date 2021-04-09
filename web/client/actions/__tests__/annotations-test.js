@@ -207,12 +207,19 @@ describe('Test correctness of the annotations actions', () => {
         expect(result.unsavedStyle).toEqual(true);
     });
     it('cancel edit annotation', () => {
-        const result = cancelEditAnnotation();
+        const result = cancelEditAnnotation({id: 1});
         expect(result.type).toEqual(CANCEL_EDIT_ANNOTATION);
+        expect(result.properties).toEqual({id: 1});
     });
     it('startDrawing', () => {
         const result = startDrawing();
         expect(result.type).toEqual(START_DRAWING);
+    });
+    it('startDrawing with options', () => {
+        const options = {geodesic: false};
+        const result = startDrawing(options);
+        expect(result.type).toEqual(START_DRAWING);
+        expect(result.options).toEqual(options);
     });
     it('toggleUnsavedChangesModal', () => {
         const result = toggleUnsavedChangesModal();
@@ -315,8 +322,9 @@ describe('Test correctness of the annotations actions', () => {
     });
 
     it('confirm close annotations', () => {
-        const result = confirmCloseAnnotations();
+        const result = confirmCloseAnnotations({id: 1});
         expect(result.type).toEqual(CONFIRM_CLOSE_ANNOTATIONS);
+        expect(result.properties).toEqual({id: 1});
     });
 
     it('changeRadius', () => {

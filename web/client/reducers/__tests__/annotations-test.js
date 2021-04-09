@@ -12,6 +12,7 @@ import annotations from '../annotations';
 import { DEFAULT_ANNOTATIONS_STYLES } from '../../utils/AnnotationsUtils';
 import { isEmpty, round } from 'lodash';
 import { set } from '../../utils/ImmutableUtils';
+import { getApi, setApi } from '../../api/userPersistedStorage';
 
 const testFeatures = {
     point1: {
@@ -73,7 +74,8 @@ import {
     initPlugin,
     hideMeasureWarning,
     toggleShowAgain,
-    unSelectFeature
+    unSelectFeature,
+    startDrawing
 } from '../../actions/annotations';
 
 import { PURGE_MAPINFO_RESULTS } from '../../actions/mapInfo';
@@ -1668,8 +1670,19 @@ describe('Test the annotations reducer', () => {
         const state = annotations({
             config: {"config1": 1}
         }, initPlugin());
-        const showPopupWarning = localStorage?.getItem("showPopupWarning") !== null ? localStorage.getItem("showPopupWarning") === "true" : true;
+        const showPopupWarning = getApi().getItem("showPopupWarning") !== null ? getApi().getItem("showPopupWarning") === "true" : true;
         expect(state.showPopupWarning).toBe(showPopupWarning);
+    });
+    it('Init plugin with accessDenied', ()=>{
+        setApi("memoryStorage");
+        const api = getApi();
+        api.setAccessDenied(true);
+        const state = annotations({
+            config: {"config1": 1}
+        }, initPlugin());
+        expect(state).toEqual({config: {"config1": 1}});
+        api.setAccessDenied(false);
+        setApi("localStorage");
     });
     it('toggleShowAgain', ()=>{
         const state = annotations({
@@ -1710,5 +1723,13 @@ describe('Test the annotations reducer', () => {
         const features = state.editing.features;
         expect(features[0].properties.canEdit).toBe(false);
         expect(features[1].properties.canEdit).toBe(false);
+    });
+    it('START_DRAWING', () => {
+        let annotationsState = annotations({
+            editing: null,
+            selected: null
+        }, startDrawing({geodesic: true}));
+        expect(annotationsState.config).toBeTruthy();
+        expect(annotationsState.config.geodesic).toBe(true);
     });
 });
